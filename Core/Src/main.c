@@ -53,6 +53,8 @@ uint8_t uartRxIndex;
 char uartRxBuffer[UART_RX_BUFFER_SIZE];
 uint8_t uartReceiveByte;
 
+uint8_t reset_flag = 0;
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == USART1) {
         // 存储接收到的字节
@@ -66,9 +68,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
                     printf("Rebooting...\n");
                     NVIC_SystemReset();
                 }
-
+                if (strncmp(uartRxBuffer, "reset", uartRxIndex) == 0) {
+                    reset_flag = 1;
+                }
                 printf("%.*s\r\n", uartRxIndex, uartRxBuffer);
-
                 uartRxIndex = 0; // 重置索引
             }
         } else {
@@ -162,6 +165,20 @@ int main(void) {
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */
+        if (reset_flag) {
+            printf("Reset...\n");
+            eeprom_settings_t settings;
+            settings.is_upgrade = 0;
+            settings.application_address = QSPI_BASE;
+            settings.start_flag = 0;
+            HAL_IWDG_Refresh(&hiwdg1);
+            EEPROM_Init(&hi2c1);
+            const HAL_StatusTypeDef result = eeprom_save_settings(&settings);
+            if (result != HAL_OK) {
+                printf("保存失败 error code:%d\n", result);
+            }
+            NVIC_SystemReset();
+        }
     }
     /* USER CODE END 3 */
 }

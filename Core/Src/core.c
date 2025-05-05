@@ -40,18 +40,6 @@ void start_load() {
         NVIC_SystemReset();
     }
     printf("初始化eeprom成功\n");
-    if (0) {
-        eeprom_settings_t settings;
-        settings.is_upgrade = 0;
-        settings.ntp_domain = "ntp.aliyun.com";
-        settings.ota_domain = "api.hemeng.org";
-        settings.application_address = QSPI_BASE;
-        settings.start_flag = 0;
-        const HAL_StatusTypeDef result = eeprom_save_settings(&settings);
-        if (result != HAL_OK) {
-            printf("保存失败 error code:%d\n", result);
-        }
-    }
     eeprom_settings_t settings;
     const HAL_StatusTypeDef result = eeprom_load_settings(&settings);
     if (result != HAL_OK) {
