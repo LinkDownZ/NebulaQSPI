@@ -4,6 +4,9 @@
 
 #include "core.h"
 
+#include "iwdg.h"
+#include "sdram.h"
+
 
 typedef void (*pFunction)(void);
 
@@ -37,20 +40,26 @@ void Jump_To_App(const uint32_t addr) {
 void start_load() {
     if (HAL_OK != EEPROM_Init(&hi2c1)) {
         printf("初始化eeprom失败\n");
-        NVIC_SystemReset();
+        HAL_Delay(60000);
     }
     printf("初始化eeprom成功\n");
     eeprom_settings_t settings;
-    const HAL_StatusTypeDef result = eeprom_load_settings(&settings);
+    HAL_StatusTypeDef result = eeprom_load_settings(&settings);
     if (result != HAL_OK) {
         printf("加载settings失败 error code:%d\n", result);
-        NVIC_SystemReset();
+        HAL_Delay(60000);
     }
     if (QSPI_W25Qxx_OK != QSPI_W25Qxx_Init()) {
         printf("初始化flash失败\n");
-        NVIC_SystemReset();
+        HAL_Delay(60000);
     }
     printf("初始化flash成功\n");
+    const uint32_t tickStart = HAL_GetTick();
+    for (int i = 0; i < SDRAM_Size / sizeof(uint64_t); ++i) {
+        *(__IO uint64_t *) (SDRAM_BANK_ADDR + i * sizeof(uint64_t)) = 0xFFFFFFFFFFFFFFFFULL;
+    }
+    const uint32_t tickEnd = HAL_GetTick();
+    printf("SDRAM消耗时间: %lu ms\n", tickEnd - tickStart);
     if (settings.is_upgrade == 0 && settings.start_flag == 0) {
         settings.start_flag = 1;
         eeprom_save_settings(&settings);
@@ -58,6 +67,9 @@ void start_load() {
     }
     if (settings.is_upgrade == 0 && settings.start_flag != 0) {
         printf("APP启动失败 重新下载APP\n");
+        settings.start_flag = 1;
+        eeprom_save_settings(&settings);
+        Jump_To_App(settings.application_address);
     }
     if (settings.is_upgrade != 0) {
         printf("APP升级\n");

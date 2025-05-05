@@ -43,6 +43,7 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/at24c32.c
         Core/Src/core.c
         Core/Src/utils.c
+        Core/Src/sdram.c
 
 )
 
