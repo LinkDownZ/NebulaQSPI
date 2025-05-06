@@ -46,6 +46,21 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/sdram.c
 
 )
+# 只在编译 fmc.c 时禁用 unused-parameter 警告
+set_source_files_properties(
+        ${PROJECT_SOURCE_DIR}/Core/Src/fmc.c
+        PROPERTIES
+        COMPILE_FLAGS "-Wno-unused-parameter"
+)
+# 设置 objcopy 工具的路径
+find_program(OBJCOPY arm-none-eabi-objcopy)
+
+# 添加构建后命令以生成 .bin 文件
+add_custom_command(TARGET ${PROJECT_NAME}
+        POST_BUILD
+        COMMAND ${OBJCOPY} -O binary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+        COMMENT "生成 ${PROJECT_NAME}.bin 文件"
+)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)

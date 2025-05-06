@@ -27,5 +27,4 @@
 
 void SDRAM_InitConfig(SDRAM_HandleTypeDef *hsdram);
 
-uint8_t SDRAM_PerformanceTest(void);
 #endif //SDRAM_H

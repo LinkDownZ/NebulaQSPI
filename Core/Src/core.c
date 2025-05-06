@@ -10,8 +10,11 @@
 
 typedef void (*pFunction)(void);
 
-pFunction JumpToApplication;
-
+/**
+ * 必须是O0或者O1编译
+ * @param addr 调整地址
+ */
+__attribute__((optimize("O1")))
 void Jump_To_App(const uint32_t addr) {
     const int8_t result = QSPI_W25Qxx_MemoryMappedMode();
     if (result == QSPI_W25Qxx_OK) {
@@ -31,7 +34,7 @@ void Jump_To_App(const uint32_t addr) {
     __disable_irq();
     __set_PRIMASK(1);
     printf("跳转地址:0x%08" PRIx32 "\n", addr);
-    JumpToApplication = (pFunction) *(__IO uint32_t *) (addr + 4);
+    const pFunction JumpToApplication = (pFunction) *(__IO uint32_t *) (addr + 4);
     __set_MSP(*(__IO uint32_t *) addr);
     JumpToApplication();
 }
@@ -55,11 +58,10 @@ void start_load() {
     }
     printf("初始化flash成功\n");
     const uint32_t tickStart = HAL_GetTick();
-    for (int i = 0; i < SDRAM_Size / sizeof(uint64_t); ++i) {
-        *(__IO uint64_t *) (SDRAM_BANK_ADDR + i * sizeof(uint64_t)) = 0xFFFFFFFFFFFFFFFFULL;
-    }
+    // 填充整个32MB SDRAM空间
+    memset((void *) SDRAM_BANK_ADDR, 0xcc, SDRAM_Size);
     const uint32_t tickEnd = HAL_GetTick();
-    printf("SDRAM消耗时间: %lu ms\n", tickEnd - tickStart);
+    printf("SDRAM填充耗时: %lu ms\n", tickEnd - tickStart);
     if (settings.is_upgrade == 0 && settings.start_flag == 0) {
         settings.start_flag = 1;
         eeprom_save_settings(&settings);
