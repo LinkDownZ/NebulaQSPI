@@ -42,6 +42,7 @@ HAL_StatusTypeDef eeprom_load_settings0(
     }
     // 6. 校验 CRC，保证读到的数据完整无误
     if (read_crc != CRC_Calculate(magic_num, text, len)) {
+        printf("eeprom load crc error\n");
         return HAL_ERROR;
     }
     cJSON *root = cJSON_Parse(text);
@@ -79,10 +80,11 @@ HAL_StatusTypeDef eeprom_load_settings0(
     return HAL_OK;
 }
 
+char *default_ntp_domain = "ntp.aliyun.com";
+char *default_ota_domain = "api.hemeng.org";
+
 HAL_StatusTypeDef eeprom_load_settings(eeprom_settings_t *settings) {
     const HAL_StatusTypeDef result = eeprom_load_settings0(settings);
-    char *default_ntp_domain = "ntp.aliyun.com";
-    char *default_ota_domain = "api.hemeng.org";
     if (result != HAL_OK) {
         settings->ntp_domain = default_ntp_domain;
         settings->ota_domain = default_ota_domain;
@@ -97,6 +99,15 @@ HAL_StatusTypeDef eeprom_load_settings(eeprom_settings_t *settings) {
     return result;
 }
 
+HAL_StatusTypeDef eeprom_save_default_settings(void) {
+    eeprom_settings_t settings;
+    settings.start_flag = 0;
+    settings.is_upgrade = 0;
+    settings.application_address = 0x90000000UL;
+    settings.ntp_domain = default_ntp_domain;
+    settings.ota_domain = default_ota_domain;
+    return eeprom_save_settings(&settings);
+}
 
 HAL_StatusTypeDef eeprom_save_settings(
     const eeprom_settings_t *settings) {

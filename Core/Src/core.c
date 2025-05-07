@@ -43,18 +43,20 @@ void Jump_To_App(const uint32_t addr) {
 void start_load() {
     if (HAL_OK != EEPROM_Init(&hi2c1)) {
         printf("初始化eeprom失败\n");
-        HAL_Delay(60000);
+        NVIC_SystemReset();
     }
     printf("初始化eeprom成功\n");
     eeprom_settings_t settings;
-    HAL_StatusTypeDef result = eeprom_load_settings(&settings);
+    const HAL_StatusTypeDef result = eeprom_load_settings(&settings);
+    eeprom_save_settings(&settings);
     if (result != HAL_OK) {
         printf("加载settings失败 error code:%d\n", result);
-        HAL_Delay(60000);
+        eeprom_save_default_settings();
+        NVIC_SystemReset();
     }
     if (QSPI_W25Qxx_OK != QSPI_W25Qxx_Init()) {
         printf("初始化flash失败\n");
-        HAL_Delay(60000);
+        NVIC_SystemReset();
     }
     printf("初始化flash成功\n");
     const uint32_t tickStart = HAL_GetTick();
@@ -69,8 +71,7 @@ void start_load() {
     }
     if (settings.is_upgrade == 0 && settings.start_flag != 0) {
         printf("APP启动失败 重新下载APP\n");
-        settings.start_flag = 1;
-        eeprom_save_settings(&settings);
+        eeprom_save_default_settings();
         Jump_To_App(settings.application_address);
     }
     if (settings.is_upgrade != 0) {

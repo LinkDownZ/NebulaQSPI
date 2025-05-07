@@ -26,6 +26,8 @@ typedef struct {
 HAL_StatusTypeDef eeprom_load_settings(
     eeprom_settings_t *settings);
 
+HAL_StatusTypeDef eeprom_save_default_settings(void);
+
 HAL_StatusTypeDef eeprom_save_settings(
     const eeprom_settings_t *settings);
 #endif //CONFIG_H
