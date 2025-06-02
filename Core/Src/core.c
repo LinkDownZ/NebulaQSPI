@@ -16,13 +16,6 @@ typedef void (*pFunction)(void);
  */
 __attribute__((optimize("O1")))
 void Jump_To_App(const uint32_t addr) {
-    const int8_t result = QSPI_W25Qxx_MemoryMappedMode();
-    if (result == QSPI_W25Qxx_OK) {
-        printf("进入内存映射模式成功\r\n");
-    } else {
-        printf("内存映射错误,错误代码:%d\r\n", result);
-        NVIC_SystemReset();
-    }
     SysTick->CTRL = 0;
     SysTick->LOAD = 0;
     SysTick->VAL = 0;
@@ -41,6 +34,9 @@ void Jump_To_App(const uint32_t addr) {
 
 
 void start_load() {
+    if (1) {
+        Jump_To_App(0x90000000);
+    }
     if (HAL_OK != EEPROM_Init(&hi2c1)) {
         printf("初始化eeprom失败\n");
         NVIC_SystemReset();

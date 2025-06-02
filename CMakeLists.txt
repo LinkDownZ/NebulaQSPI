@@ -44,6 +44,7 @@ add_executable(${CMAKE_PROJECT_NAME}
         Core/Src/core.c
         Core/Src/utils.c
         Core/Src/sdram.c
+        Core/Src/uart_handler.c
 
 )
 # 只在编译 fmc.c 时禁用 unused-parameter 警告
